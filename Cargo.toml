@@ -1,0 +1,7 @@
+[package]
+name = "rwog"
+version = "0.1.0"
+authors = ["Jesse Talavera-Greenberg <jessetalavera@aol.com>"]
+
+[dependencies]
+nix = "0.10.0"
