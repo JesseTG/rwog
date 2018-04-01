@@ -12,7 +12,7 @@ rwog -g \<groups\>... [-- *command-with-args*...]
 
 # DESCRIPTION
 
-**rwog** lets you run a given command while temporarily reducing your group
+`rwog` lets you run a given command while temporarily reducing your group
 membership.  It does not modify `/etc/group` or `/etc/passwd`, and cannot
 grant you permissions you don't already have.  Possible use cases for `rwog`
 include:
