@@ -2,6 +2,24 @@
 name = "rwog"
 version = "0.1.0"
 authors = ["Jesse Talavera-Greenberg <jessetalavera@aol.com>"]
+keywords = ["group", "privileges", "user"]
+categories = ["command-line-utilities", "os"]
+description = "Run a program as if you were not a member of certain supplementary groups. Cannot grant privileges or change /etc/group."
+repository = "https://github.com/JesseTG/rwog"
+url = "https://github.com/JesseTG/rwog"
+readme = "README.md"
+license = "MIT"
 
 [dependencies]
+clap = "2.31.2"
 nix = "0.10.0"
+passwd = "0.0.1"
+groups = "0.1.1"
+caps = "0.2.0"
+
+[badges]
+maintenance = { status = "as-is" }
+travis-ci = { repository = "https://github.com/JesseTG/rwog", branch = "master" }
+
+[profile.release]
+lto = true
