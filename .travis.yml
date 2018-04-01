@@ -1,0 +1,46 @@
+# .travis.yml originally borrowed from https://github.com/roblabla/cargo-travis
+
+sudo: required
+dist: trusty
+language: rust
+git:
+  depth: 1
+
+# Cache cargo symbols for faster build
+cache: cargo
+
+addons:
+  apt:
+    packages:
+      - libcap2-bin
+      - pandoc
+
+rust:
+  - nightly
+  - beta
+  # check it compiles on the latest stable compiler
+  - stable
+  # and the first stable one (this should be bumped as the minimum
+  # Rust version required changes)
+  - 1.0.0
+
+before_script:
+  - export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install cargo-update || echo "cargo-update already installed"
+  - cargo install cargo-travis || echo "cargo-travis already installed"
+  - cargo install-update -a # update outdated cached binaries
+
+# the main build
+script:
+  - cargo build --jobs $(nproc) --release --verbose
+  - pandoc --smart --to=markdown_github README.pandoc > README.md
+  - sudo setcap cap_setgid=pie target/release/rwog
+  - cargo test --verbose
+  - cargo bench --verbose
+
+deploy:
+  provider: script
+  script:  cargo publish --verbose --token "$CARGO_RWOG_TOKEN"
+  on:
+    branch: master
+    tags: true
