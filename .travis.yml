@@ -26,13 +26,14 @@ rust:
 
 before_script:
   - export PATH=$HOME/.cargo/bin:$PATH
+  - cargo login "$CARGO_RWOG_TOKEN"
   - cargo install cargo-update || echo "cargo-update already installed"
   - cargo install cargo-travis || echo "cargo-travis already installed"
   - cargo install-update -a # update outdated cached binaries
 
 # the main build
 script:
-  - cargo build --jobs $(nproc) --release --verbose
+  - cargo build --release --verbose
   - pandoc --smart --to=markdown_github README.pandoc > README.md
   - sudo setcap cap_setgid=pie target/release/rwog
   - cargo test --verbose
@@ -40,7 +41,7 @@ script:
 
 deploy:
   provider: script
-  script:  cargo publish --verbose --token "$CARGO_RWOG_TOKEN"
+  script:  cargo release --sign --no-confirm
   on:
     branch: master
     tags: true

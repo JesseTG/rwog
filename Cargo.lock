@@ -148,7 +148,7 @@ dependencies = [
 
 [[package]]
 name = "rwog"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "caps 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)",
