@@ -1,7 +1,6 @@
 extern crate caps;
 #[macro_use]
 extern crate clap;
-extern crate groups;
 extern crate nix;
 extern crate users;
 
@@ -9,12 +8,11 @@ use users::*;
 use users::os::unix::*;
 use caps::{CapSet, Capability};
 use clap::{App, AppSettings, Arg};
-use groups::get_group_by_name;
 use nix::Error;
 use nix::errno::Errno;
-use nix::libc::{gid_t, uid_t};
 use nix::unistd::*;
-use std::cmp::Ordering;
+use nix::unistd::Gid;
+use std::convert::Into;
 use std::os::unix::process::CommandExt;
 use std::process::{exit, Command};
 
@@ -22,11 +20,11 @@ const GROUPS_ARG: &'static str = "groups";
 const COMMANDS_ARG: &'static str = "command-with-args";
 
 fn main() {
-    let uid = get_current_uid();
-    let user = match get_user_by_uid(uid) {
+    let user = get_current_uid();
+    let user = match get_user_by_uid(user) {
         Some(user) => user,
         None => {
-            eprintln!("Failed to get user info for uid {}", uid);
+            eprintln!("Failed to get user info for uid {}", user);
             exit(1);
         }
     };
@@ -38,6 +36,22 @@ fn main() {
             exit(1);
         }
     };
+    let groups: Vec<Group> = getgroups()
+        .expect("Failed to get supplementary group list")
+        .iter()
+        .filter_map(|g| get_group_by_gid((*g).into()))
+        .collect();
+
+    let mut group_names: Vec<&str> = groups.iter().map(|g| g.name()).collect();
+    let group = get_current_gid();
+    let group = match get_group_by_gid(group) {
+        Some(group) => group,
+        None => {
+            eprintln!("Failed to get user info for gid {}", group);
+            exit(1);
+        }
+    };
+    group_names.retain(|n| n != &group.name());
 
     let app: App = app_from_crate!();
     let args = app.setting(AppSettings::ArgRequiredElseHelp)
@@ -52,7 +66,9 @@ fn main() {
                 .multiple(true)
                 .empty_values(false)
                 .long_help(include_str!("help/groups-long.txt"))
-                .min_values(1), // TODO: Can I put possible_values in here usefully?
+                .hide_possible_values(true)
+                .possible_values(&group_names)
+                .min_values(1),
         )
         .arg(
             Arg::with_name(COMMANDS_ARG)
@@ -69,63 +85,30 @@ fn main() {
         .about(include_str!("help/about.txt"))
         .get_matches();
 
-    let gid = getgid();
-    let mut groups_to_drop: Vec<Gid> = args.values_of(GROUPS_ARG)
+    let groups_to_drop: Vec<Group> = args.values_of(GROUPS_ARG)
         .expect("The arg parser should've handled this already, file a bug")
-        .filter_map(|name| match get_group_by_name(name) {
-            Some(group) => {
-                let group = Gid::from_raw(group.gid);
-                if gid == group {
-                    // If trying to drop your primary group...
-                    eprintln!("Cannot drop primary group {}, ignoring", group);
-                }
-                Some(group)
-            }
-            None => {
-                eprintln!("{} is not a valid group, ignoring", name);
-                None
-            }
-        })
+        .filter_map(get_group_by_name)
         .collect();
 
-    // let mut groups_to_drop = groups_to_drop
-    groups_to_drop.sort_by(|a, b| {
-        if a == b {
-            Ordering::Equal
-        } else {
-            Ordering::Less
-        }
-    });
-    groups_to_drop.dedup();
-    // dedup only removes duplicate items that are next to each other
-    // I don't care if the elements are actually sorted or not
+    let mut gids_to_drop: Vec<gid_t> = groups_to_drop.iter().map(|g| g.gid()).collect();
+    gids_to_drop.sort();
+    gids_to_drop.dedup();
 
-    if groups_to_drop.is_empty() {
-        eprintln!("No valid groups listed");
-        eprintln!("{}", args.usage());
-        exit(1); // TODO: Should I just allow this trivial behavior?  Yes.  How?
-    }
+    let remaining_groups: Vec<Gid> = groups
+        .iter()
+        .filter(|g| !gids_to_drop.contains(&g.gid()))
+        .map(|g| Gid::from_raw(g.gid()))
+        .collect();
 
     let command: Vec<_> = args.values_of(COMMANDS_ARG)
         .expect("The arg parser should've handled this command already, file a bug")
         .collect();
 
-    let groups: Vec<Gid> = match getgroups() {
-        Ok(mut groups) => {
-            groups.retain(|g| !groups_to_drop.contains(g));
-            groups
-        }
-        Err(e) => {
-            eprintln!("{}", e);
-            exit(1);
-        }
-    };
-
     eprintln!("Dropped groups: {:?}", groups_to_drop);
     eprintln!("Remaining groups: {:?}", groups);
     eprintln!("Command to run: {:?}", command);
 
-    match setgroups(&groups[..]) {
+    match setgroups(&remaining_groups[..]) {
         Err(Error::Sys(Errno::EPERM)) => {
             eprintln!("Insufficient permissions to reduce groups.");
             eprintln!("Please run 'setcap $(which rwog) cap_setgid=pe' as root");
