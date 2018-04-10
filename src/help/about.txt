@@ -1,0 +1,2 @@
+Run a program as if you were not a member of certain supplementary groups.
+Cannot grant privileges or change /etc/group.

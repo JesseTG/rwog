@@ -36,7 +36,7 @@ fn main() {
                 .value_delimiter(",")
                 .multiple(true)
                 .empty_values(false)
-                .long_help("Comma-separated list of groups to drop.  You cannot drop your primary group, and you must specify at least one.")
+                .long_help(include_str!("help/groups-long.txt"))
                 .min_values(1) // TODO: Can I put possible_values in here usefully?
         )
         .arg(Arg::with_name(COMMANDS_ARG)
@@ -46,12 +46,9 @@ fn main() {
             .default_value(&passwd.shell)
             .empty_values(false)
             .help("Command and arguments to run")
-            .long_help("The command to run and the arguments to pass it.  If not given, start a shell.")
+            .long_help(include_str!("help/commands-long.txt"))
         )
-        .about("
-Run a program as if you were not a member of certain supplementary groups.
-Cannot grant privileges or change /etc/group.",
-        )
+        .about(include_str!("help/about.txt"))
         .get_matches();
 
     let mut groups_to_drop: Vec<Gid> = args.values_of(GROUPS_ARG)
