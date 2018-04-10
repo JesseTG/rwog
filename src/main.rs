@@ -25,8 +25,7 @@ fn main() {
         .expect("Couldn't get /etc/passwd entry for active user (your system might be broken)");
 
     let app: App = app_from_crate!();
-    let args = app
-        .setting(AppSettings::ArgRequiredElseHelp)
+    let args = app.setting(AppSettings::ArgRequiredElseHelp)
         .arg(
             Arg::with_name(GROUPS_ARG)
                 .alias("group")
@@ -37,16 +36,19 @@ fn main() {
                 .multiple(true)
                 .empty_values(false)
                 .long_help(include_str!("help/groups-long.txt"))
-                .min_values(1) // TODO: Can I put possible_values in here usefully?
+                .min_values(1), // TODO: Can I put possible_values in here usefully?
         )
-        .arg(Arg::with_name(COMMANDS_ARG)
-            .aliases(&["command", "commands", "cmd", "cmds", "prog", "progs", "programs", "programs"])
+        .arg(
+            Arg::with_name(COMMANDS_ARG)
+                .aliases(&[
+                    "command", "commands", "cmd", "cmds", "prog", "progs", "programs", "programs"
+                ])
             .multiple(true)
             .last(true)
             .default_value(&passwd.shell)
             .empty_values(false)
             .help("Command and arguments to run")
-            .long_help(include_str!("help/commands-long.txt"))
+                .long_help(include_str!("help/commands-long.txt")),
         )
         .about(include_str!("help/about.txt"))
         .get_matches();
