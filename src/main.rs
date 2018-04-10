@@ -51,10 +51,18 @@ fn main() {
         .about(include_str!("help/about.txt"))
         .get_matches();
 
+    let gid = getgid();
     let mut groups_to_drop: Vec<Gid> = args.values_of(GROUPS_ARG)
         .expect("The arg parser should've handled this already, file a bug")
         .filter_map(|name| match get_group_by_name(name) {
-            Some(group) => Some(Gid::from_raw(group.gid)),
+            Some(group) => {
+                let group = Gid::from_raw(group.gid);
+                if gid == group {
+                    // If trying to drop your primary group...
+                    eprintln!("Cannot drop primary group {}, ignoring", group);
+                }
+                Some(group)
+            }
             None => {
                 eprintln!("{} is not a valid group, ignoring", name);
                 None
