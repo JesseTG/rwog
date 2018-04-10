@@ -3,8 +3,10 @@ extern crate caps;
 extern crate clap;
 extern crate groups;
 extern crate nix;
-extern crate passwd;
+extern crate users;
 
+use users::*;
+use users::os::unix::*;
 use caps::{CapSet, Capability};
 use clap::{App, AppSettings, Arg};
 use groups::get_group_by_name;
@@ -12,7 +14,6 @@ use nix::Error;
 use nix::errno::Errno;
 use nix::libc::{gid_t, uid_t};
 use nix::unistd::*;
-use passwd::Passwd;
 use std::cmp::Ordering;
 use std::os::unix::process::CommandExt;
 use std::process::{exit, Command};
@@ -21,8 +22,22 @@ const GROUPS_ARG: &'static str = "groups";
 const COMMANDS_ARG: &'static str = "command-with-args";
 
 fn main() {
-    let passwd = Passwd::from_uid(uid_t::from(getuid()))
-        .expect("Couldn't get /etc/passwd entry for active user (your system might be broken)");
+    let uid = get_current_uid();
+    let user = match get_user_by_uid(uid) {
+        Some(user) => user,
+        None => {
+            eprintln!("Failed to get user info for uid {}", uid);
+            exit(1);
+        }
+    };
+    let user_shell = user.shell();
+    let user_shell = match user_shell.to_str() {
+        Some(s) => s,
+        None => {
+            eprintln!("Failed to convert user shell {:?} to str", user_shell);
+            exit(1);
+        }
+    };
 
     let app: App = app_from_crate!();
     let args = app.setting(AppSettings::ArgRequiredElseHelp)
@@ -45,7 +60,7 @@ fn main() {
                 ])
             .multiple(true)
             .last(true)
-            .default_value(&passwd.shell)
+                .default_value(user_shell)
             .empty_values(false)
             .help("Command and arguments to run")
                 .long_help(include_str!("help/commands-long.txt")),

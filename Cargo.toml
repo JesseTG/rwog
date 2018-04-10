@@ -13,8 +13,8 @@ license = "MIT"
 [dependencies]
 clap = "2.31.2"
 nix = "0.10.0"
-passwd = "0.0.1"
 groups = "0.1.1"
+users = "0.6.1"
 caps = "0.2.0"
 
 [badges]
