@@ -16,9 +16,9 @@ addons:
       - pandoc
 
 rust:
-  - nightly
-  - beta
   - stable
+  - beta
+  - nightly
 
 before_script:
   - export PATH=$HOME/.cargo/bin:$PATH
