@@ -14,6 +14,7 @@ use nix::libc::{gid_t, uid_t};
 use nix::unistd::*;
 use passwd::Passwd;
 use std::cmp::Ordering;
+use std::os::unix::process::CommandExt;
 use std::process::{exit, Command};
 
 const GROUPS_ARG: &'static str = "groups";
@@ -119,13 +120,9 @@ Cannot grant privileges or change /etc/group.",
         exit(1);
     }
 
-    let status = Command::new(&command[0]).args(&command[1..]).status();
+    let error = Command::new(&command[0]).args(&command[1..]).exec();
+    // Should not reach this point if the command succeeds
+    println!("Failed to execute {:?}: {}", command, error);
 
-    exit(match status {
-        Ok(status) => status.code().expect("Error not handled yet"),
-        Err(e) => {
-            println!("Failed to execute {:?}: {}", command, e);
-            255i32
-        }
-    });
+    exit(255i32);
 }
