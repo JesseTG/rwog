@@ -59,7 +59,7 @@ Cannot grant privileges or change /etc/group.",
         .filter_map(|name| match get_group_by_name(name) {
             Some(group) => Some(Gid::from_raw(group.gid)),
             None => {
-                println!("{} is not a valid group, ignoring", name);
+                eprintln!("{} is not a valid group, ignoring", name);
                 None
             }
         })
@@ -78,8 +78,8 @@ Cannot grant privileges or change /etc/group.",
     // I don't care if the elements are actually sorted or not
 
     if groups_to_drop.is_empty() {
-        println!("No valid groups listed");
-        println!("{}", args.usage());
+        eprintln!("No valid groups listed");
+        eprintln!("{}", args.usage());
         exit(1); // TODO: Should I just allow this trivial behavior?  Yes.  How?
     }
 
@@ -93,36 +93,36 @@ Cannot grant privileges or change /etc/group.",
             groups
         }
         Err(e) => {
-            println!("{}", e);
+            eprintln!("{}", e);
             exit(1);
         }
     };
 
-    println!("Dropped groups: {:?}", groups_to_drop);
-    println!("Remaining groups: {:?}", groups);
-    println!("Command to run: {:?}", command);
+    eprintln!("Dropped groups: {:?}", groups_to_drop);
+    eprintln!("Remaining groups: {:?}", groups);
+    eprintln!("Command to run: {:?}", command);
 
     match setgroups(&groups[..]) {
         Err(Error::Sys(Errno::EPERM)) => {
-            println!("Insufficient permissions to reduce groups.");
-            println!("Please run 'setcap $(which rwog) cap_setgid=pe' as root");
+            eprintln!("Insufficient permissions to reduce groups.");
+            eprintln!("Please run 'setcap $(which rwog) cap_setgid=pe' as root");
             exit(1);
         }
         Err(e) => {
-            println!("Failed to reduce groups: {}", e);
+            eprintln!("Failed to reduce groups: {}", e);
             exit(1);
         }
         _ => {} // OK: Nothing happened
     };
 
     if let Err(e) = caps::drop(None, CapSet::Effective, Capability::CAP_SETGID) {
-        println!("Failed to drop capabilities: {}", e);
+        eprintln!("Failed to drop capabilities: {}", e);
         exit(1);
     }
 
     let error = Command::new(&command[0]).args(&command[1..]).exec();
     // Should not reach this point if the command succeeds
-    println!("Failed to execute {:?}: {}", command, error);
+    eprintln!("Failed to execute {:?}: {}", command, error);
 
     exit(255i32);
 }
