@@ -75,11 +75,11 @@ fn main() {
                 .aliases(&[
                     "command", "commands", "cmd", "cmds", "prog", "progs", "programs", "programs"
                 ])
-            .multiple(true)
-            .last(true)
+                .multiple(true)
+                .last(true)
                 .default_value(user_shell)
-            .empty_values(false)
-            .help("Command and arguments to run")
+                .empty_values(false)
+                .help("Command and arguments to run")
                 .long_help(include_str!("help/commands-long.txt")),
         )
         .about(include_str!("help/about.txt"))
@@ -110,8 +110,7 @@ fn main() {
 
     match setgroups(&remaining_groups[..]) {
         Err(Error::Sys(Errno::EPERM)) => {
-            eprintln!("Insufficient permissions to reduce groups.");
-            eprintln!("Please run 'setcap $(which rwog) cap_setgid=pe' as root");
+            eprintln!(include_str!("error/permission-denied.txt"));
             exit(1);
         }
         Err(e) => {

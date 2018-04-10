@@ -1,0 +1,2 @@
+Insufficient permissions to reduce groups.
+Please run 'setcap $(which rwog) cap_setgid=pe' as root
