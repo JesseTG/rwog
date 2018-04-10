@@ -45,6 +45,7 @@ fn main() {
             Arg::with_name(GROUPS_ARG)
                 .alias("group")
                 .short("g")
+                .long(GROUPS_ARG)
                 .required(true)
                 .help("Groups to drop (at least 1)")
                 .value_delimiter(",")
