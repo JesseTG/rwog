@@ -1,6 +1,6 @@
 [package]
 name = "rwog"
-version = "0.2.1"
+version = "0.2.3"
 authors = ["Jesse Talavera-Greenberg <jessetalavera@aol.com>"]
 keywords = ["group", "privileges", "user"]
 categories = ["command-line-utilities", "os"]
