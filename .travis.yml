@@ -22,6 +22,8 @@ rust:
 
 before_script:
   - id
+  - getent passwd
+  - getent group
   - export PATH=$HOME/.cargo/bin:$PATH
   - cargo login "$CARGO_RWOG_TOKEN"
   - cargo install cargo-update || echo "cargo-update already installed"
