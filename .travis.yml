@@ -21,10 +21,12 @@ rust:
   - nightly
 
 before_script:
+  - id
   - export PATH=$HOME/.cargo/bin:$PATH
   - cargo login "$CARGO_RWOG_TOKEN"
   - cargo install cargo-update || echo "cargo-update already installed"
   - cargo install cargo-travis || echo "cargo-travis already installed"
+  - cargo install cargo-release || echo "cargo-release already installed"
   - cargo install-update -a # update outdated cached binaries
 
 # the main build
