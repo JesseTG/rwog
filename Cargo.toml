@@ -12,7 +12,7 @@ license = "MIT"
 
 [dependencies]
 clap = "2.31.2"
-nix = "0.10.0"
+nix = "0.11.0"
 users = "0.6.1"
 caps = "0.2.0"
 
