@@ -14,7 +14,7 @@ license = "MIT"
 clap = "2.31.2"
 nix = "0.11.0"
 users = "0.7.0"
-caps = "0.2.0"
+caps = "0.3.4"
 
 [badges]
 maintenance = { status = "as-is" }
